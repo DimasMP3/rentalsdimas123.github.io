@@ -1,0 +1,111 @@
+/* Auth pages shared styling */
+.auth-container {
+    background: linear-gradient(135deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.7) 100%), 
+                url('../images/auth-bg.jpg') center/cover no-repeat;
+    min-height: 100vh;
+    padding: 40px 0;
+    display: flex;
+    align-items: center;
+}
+
+.auth-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    transform: translateY(0);
+    transition: all 0.3s ease;
+}
+
+.auth-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.auth-card-header {
+    margin-bottom: 25px;
+}
+
+.auth-card-header h3 {
+    color: #333;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    font-size: 1.8rem;
+}
+
+.auth-divider {
+    position: relative;
+    text-align: center;
+    margin: 15px 0;
+}
+
+.auth-divider span {
+    display: inline-block;
+    width: 50px;
+    height: 2px;
+    background: linear-gradient(90deg, #3a7bd5, #00d2ff);
+}
+
+.custom-input {
+    border: none;
+    border-bottom: 1px solid #ddd;
+    border-radius: 0;
+    padding: 12px 5px;
+    background: transparent;
+    transition: all 0.3s ease;
+    box-shadow: none !important;
+}
+
+.custom-input:focus {
+    border-color: #3a7bd5;
+}
+
+.form-floating label {
+    padding-left: 5px;
+}
+
+.form-floating > .form-control:focus ~ label,
+.form-floating > .form-control:not(:placeholder-shown) ~ label {
+    transform: scale(0.85) translateY(-0.75rem) translateX(0);
+    color: #3a7bd5;
+}
+
+.auth-btn {
+    padding: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #3a7bd5, #00d2ff);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.auth-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(58, 123, 213, 0.4);
+}
+
+.auth-link {
+    color: #3a7bd5;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.auth-link:hover {
+    color: #00d2ff;
+    text-decoration: underline;
+}
+
+.form-check-input:checked {
+    background-color: #3a7bd5;
+    border-color: #3a7bd5;
+}
+
+@media (max-width: 768px) {
+    .auth-card {
+        padding: 20px;
+    }
+} 
