@@ -63,6 +63,10 @@ writable/uploads/*
 writable/debugbar/*
 !writable/debugbar/.gitkeep
 
+# Temp directory
+temp/*
+!temp/README.md
+
 php_errors.log
 
 #-------------------------
@@ -124,3 +128,7 @@ nb-configuration.xml
 
 /results/
 /phpunit*.xml
+
+# Database backups
+database/backup/*
+!database/backup/README.md
