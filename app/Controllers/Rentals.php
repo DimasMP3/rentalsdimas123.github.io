@@ -106,28 +106,39 @@ class Rentals extends BaseController
                 'status' => 'pending'
             ];
             
+            // Log payment method details for debugging
+            log_message('info', 'Payment Method: ' . $paymentMethod);
+            
             // Collect specific payment method details
             switch ($paymentMethod) {
                 case 'bank_transfer':
-                    $paymentData['bank_name'] = $this->request->getPost('bank_name');
+                    $bankName = $this->request->getPost('bank_name');
+                    $paymentData['bank_name'] = $bankName;
+                    log_message('info', 'Bank Name: ' . $bankName);
                     break;
                     
                 case 'e_wallet':
-                    $paymentData['ewallet_provider'] = $this->request->getPost('ewallet_provider');
+                    $ewalletProvider = $this->request->getPost('ewallet_provider');
+                    $paymentData['ewallet_provider'] = $ewalletProvider;
+                    log_message('info', 'E-Wallet Provider: ' . $ewalletProvider);
                     break;
                     
                 case 'paylater':
-                    $paymentData['paylater_provider'] = $this->request->getPost('paylater_provider');
+                    $paylaterProvider = $this->request->getPost('paylater_provider');
+                    $paymentData['paylater_provider'] = $paylaterProvider;
+                    log_message('info', 'Paylater Provider: ' . $paylaterProvider);
                     break;
                     
                 case 'minimarket':
-                    $paymentData['minimarket_provider'] = $this->request->getPost('minimarket_provider');
+                    $minimarketProvider = $this->request->getPost('minimarket_provider');
+                    $paymentData['minimarket_provider'] = $minimarketProvider;
+                    log_message('info', 'Minimarket Provider: ' . $minimarketProvider);
                     break;
             }
             
             // Handle payment proof upload if provided
             $paymentProof = $this->request->getFile('payment_proof');
-            if ($paymentProof->isValid() && !$paymentProof->hasMoved()) {
+            if ($paymentProof && $paymentProof->isValid() && !$paymentProof->hasMoved()) {
                 $proofName = $paymentProof->getRandomName();
                 $paymentProof->move(ROOTPATH . 'public/uploads/payments', $proofName);
                 $paymentData['payment_proof'] = $proofName;
@@ -150,7 +161,27 @@ class Rentals extends BaseController
             return redirect()->to('/rentals')->with('error', 'Pesanan tidak ditemukan');
         }
         
+        // Get payment record
         $payment = $this->paymentModel->where('order_id', $id)->first();
+        
+        // Auto-fix payment method if needed
+        if ($payment && empty($payment['payment_method'])) {
+            $db = \Config\Database::connect();
+            
+            // Direct SQL fix for this specific payment
+            $sql = "UPDATE payments SET payment_method = CASE 
+                        WHEN bank_name != '' THEN 'bank_transfer' 
+                        WHEN ewallet_provider != '' THEN 'e_wallet' 
+                        WHEN paylater_provider != '' THEN 'paylater' 
+                        WHEN minimarket_provider != '' THEN 'minimarket' 
+                        ELSE payment_method 
+                    END 
+                    WHERE id = ?";
+            $db->query($sql, [$payment['id']]);
+            
+            // Reload the payment record
+            $payment = $this->paymentModel->find($payment['id']);
+        }
         
         // Check if user has already reviewed this rental
         $hasReviewed = false;

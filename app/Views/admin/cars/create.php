@@ -43,11 +43,12 @@
                         <input type="text" name="license_plate" id="license_plate" class="form-control" value="<?= old('license_plate') ?>" required>
                     </div>
                     <div class="col-md-4">
-                        <label for="daily_rate" class="form-label">Daily Rate (Rp)</label>
+                        <label for="daily_rate" class="form-label">Daily Rate - 24 jam dalam/luar kota (Rp)</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-money-bill-wave"></i></span>
                             <input type="number" name="daily_rate" id="daily_rate" class="form-control" step="0.01" value="<?= old('daily_rate') ?>" required>
                         </div>
+                        <small class="text-muted">*Harga untuk 24 jam dalam/luar kota. Harian + Supir = 200% dari harga ini.</small>
                     </div>
                 </div>
                 

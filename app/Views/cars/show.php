@@ -62,15 +62,14 @@
                 <div class="price-container">
                     <div class="price-row">
                         <div class="price-category">
-                            <div class="price-label">12 jam / dalam kota</div>
+                            <div class="price-label">24 jam dalam/luar kota</div>
                         </div>
                         <div class="price-amount">
                             <?php if(is_discount_day($car['id'])): ?>
-                                <span class="original-price">Rp <?= number_format($car['daily_rate'] * 0.5, 0, ',', '.') ?> - Rp <?= number_format($car['daily_rate'] * 0.75, 0, ',', '.') ?></span>
-                                <span class="discounted-price">Rp <?= number_format(get_discounted_price($car, 0.5), 0, ',', '.') ?> - Rp <?= number_format(get_discounted_price($car, 0.75), 0, ',', '.') ?></span>
+                                <span class="original-price">Rp <?= number_format($car['daily_rate'], 0, ',', '.') ?></span>
+                                <span class="discounted-price">Rp <?= number_format(get_discounted_price($car, 1), 0, ',', '.') ?></span>
                             <?php else: ?>
-                                Rp <?= number_format($car['daily_rate'] * 0.5, 0, ',', '.') ?> - Rp 
-                                <?= number_format($car['daily_rate'] * 0.75, 0, ',', '.') ?>
+                                Rp <?= number_format($car['daily_rate'], 0, ',', '.') ?>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -80,11 +79,11 @@
                         </div>
                         <div class="price-amount">
                             <?php if(is_discount_day($car['id'])): ?>
-                                <span class="original-price">Rp <?= number_format($car['daily_rate'] * 0.75, 0, ',', '.') ?> - Rp <?= number_format($car['daily_rate'], 0, ',', '.') ?></span>
-                                <span class="discounted-price">Rp <?= number_format(get_discounted_price($car, 0.75), 0, ',', '.') ?> - Rp <?= number_format(get_discounted_price($car, 1), 0, ',', '.') ?></span>
+                                <span class="original-price">Rp <?= number_format($car['daily_rate'] * 2, 0, ',', '.') ?></span>
+                                <span class="discounted-price">Rp <?= number_format(get_discounted_price($car, 2), 0, ',', '.') ?></span>
                             <?php else: ?>
-                                Rp <?= number_format($car['daily_rate'] * 0.75, 0, ',', '.') ?> - Rp 
-                                <?= number_format($car['daily_rate'], 0, ',', '.') ?>
+                                Rp <?= number_format($car['daily_rate'] * 1.5, 0, ',', '.') ?> - Rp 
+                                <?= number_format($car['daily_rate'] * 2, 0, ',', '.') ?>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -113,18 +112,14 @@
                 
                 <div class="action-buttons">
                     <?php if (session()->get('isLoggedIn')): ?>
-                    <a href="<?= site_url('rentals/create/' . $car['id']) ?>" class="btn-rent">
+                    <a href="<?= site_url('rentals/create/' . $car['id']) ?>" class="btn-rent btn-block">
                         <i class="fas fa-calendar-check"></i> Sewa Sekarang
                     </a>
                     <?php else: ?>
-                    <a href="<?= site_url('login?redirect=cars/' . $car['id']) ?>" class="btn-rent">
+                    <a href="<?= site_url('login?redirect=cars/' . $car['id']) ?>" class="btn-rent btn-block">
                         <i class="fas fa-sign-in-alt"></i> Login untuk Menyewa
                     </a>
                     <?php endif; ?>
-                    
-                    <a href="https://wa.me/083896297994?text=Saya%20tertarik%20untuk%20menyewa%20<?= urlencode($car['brand'] . ' ' . $car['model']) ?>" class="btn-whatsapp">
-                        <i class="fab fa-whatsapp"></i> Pesan via WhatsApp
-                    </a>
                 </div>
             </div>
         </div>
@@ -384,18 +379,17 @@
     }
     
     .action-buttons {
-        display: flex;
-        gap: 12px;
+        width: 100%;
     }
     
     .btn-rent {
-        flex: 1;
+        width: 100%;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
         color: white;
-        padding: 12px 15px;
+        padding: 15px;
         border-radius: 10px;
         text-decoration: none;
         font-weight: 600;
@@ -412,31 +406,6 @@
         background: linear-gradient(135deg, var(--gradient-end) 0%, var(--gradient-start) 100%);
         transform: translateY(-3px);
         box-shadow: 0 8px 15px rgba(67, 97, 238, 0.25);
-        color: white;
-    }
-    
-    .btn-whatsapp {
-        flex: 1;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
-        color: white;
-        padding: 12px 15px;
-        border-radius: 10px;
-        text-decoration: none;
-        font-weight: 600;
-        transition: all 0.3s ease;
-    }
-    
-    .btn-whatsapp i {
-        margin-right: 8px;
-    }
-    
-    .btn-whatsapp:hover {
-        background: linear-gradient(135deg, #128C7E 0%, #25D366 100%);
-        transform: translateY(-3px);
-        box-shadow: 0 8px 15px rgba(37, 211, 102, 0.25);
         color: white;
     }
     

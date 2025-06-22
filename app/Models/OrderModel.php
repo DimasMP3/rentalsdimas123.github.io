@@ -28,7 +28,9 @@ class OrderModel extends Model
     // Get order with related data
     public function getOrderWithDetails($orderId)
     {
-        return $this->select('orders.*, orders.attachment, cars.brand, cars.model, cars.image, cars.year, cars.license_plate, cars.daily_rate, cars.description, users.name as user_name, users.email as user_email')
+        return $this->select('orders.*, orders.attachment, cars.brand, cars.model, 
+        cars.image, cars.year, cars.license_plate, cars.daily_rate, cars.description, 
+        users.name as user_name, users.email as user_email')
                     ->join('cars', 'cars.id = orders.car_id')
                     ->join('users', 'users.id = orders.user_id')
                     ->where('orders.id', $orderId)

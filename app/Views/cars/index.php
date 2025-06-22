@@ -28,12 +28,12 @@
                         </div>
                         
                         <div class="mb-3">
-                            <label for="min_price" class="filter-label">Harga Minimum</label>
+                            <label for="min_price" class="filter-label">Harga Minimum / 24 Jam</label>
                             <input type="number" name="min_price" id="min_price" class="form-control" value="<?= isset($_GET['min_price']) ? $_GET['min_price'] : '' ?>">
                         </div>
                         
                         <div class="mb-3">
-                            <label for="max_price" class="filter-label">Harga Maksimum</label>
+                            <label for="max_price" class="filter-label">Harga Maksimum / 24 Jam</label>
                             <input type="number" name="max_price" id="max_price" class="form-control" value="<?= isset($_GET['max_price']) ? $_GET['max_price'] : '' ?>">
                         </div>
                         
@@ -70,11 +70,10 @@
                                     </div>
                                     <div class="price-amount">
                                         <?php if(is_discount_day($car['id'])): ?>
-                                            <span class="original-price">Rp <?= number_format($car['daily_rate'] * 0.5, 0, ',', '.') ?></span>
-                                            <span class="discounted-price">Rp <?= number_format(get_discounted_price($car, 0.5), 0, ',', '.') ?></span>
+                                            <span class="original-price">Rp <?= number_format($car['daily_rate'], 0, ',', '.') ?></span>
+                                            <span class="discounted-price">Rp <?= number_format(get_discounted_price($car, 1), 0, ',', '.') ?></span>
                                         <?php else: ?>
-                                            Rp <?= number_format($car['daily_rate'] * 0.5, 0, ',', '.') ?> - Rp 
-                                            <?= number_format($car['daily_rate'] * 0.75, 0, ',', '.') ?>
+                                            Rp <?= number_format($car['daily_rate'], 0, ',', '.') ?>
                                         <?php endif; ?>
                                     </div>
                                 </div>
@@ -84,11 +83,11 @@
                                     </div>
                                     <div class="price-amount">
                                         <?php if(is_discount_day($car['id'])): ?>
-                                            <span class="original-price">Rp <?= number_format($car['daily_rate'], 0, ',', '.') ?></span>
-                                            <span class="discounted-price">Rp <?= number_format(get_discounted_price($car, 1), 0, ',', '.') ?></span>
+                                            <span class="original-price">Rp <?= number_format($car['daily_rate'] * 2, 0, ',', '.') ?></span>
+                                            <span class="discounted-price">Rp <?= number_format(get_discounted_price($car, 2), 0, ',', '.') ?></span>
                                         <?php else: ?>
-                                            Rp <?= number_format($car['daily_rate'] * 0.75, 0, ',', '.') ?> - Rp 
-                                            <?= number_format($car['daily_rate'], 0, ',', '.') ?>
+                                            Rp <?= number_format($car['daily_rate'] * 1.5, 0, ',', '.') ?> - Rp 
+                                            <?= number_format($car['daily_rate'] * 2, 0, ',', '.') ?>
                                         <?php endif; ?>
                                     </div>
                                 </div>

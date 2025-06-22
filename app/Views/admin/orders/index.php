@@ -1,5 +1,21 @@
 <?= $this->extend('layouts/admin') ?>
 <?= $this->section('content') ?>
+<?php 
+// Load payment helper
+helper('payment'); 
+?>
+<style>
+/* Payment Method Badge Style */
+.payment-method-badge {
+    background-color: #f8f9fa;
+    color: #333;
+    font-weight: normal;
+    font-size: 0.85rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+}
+</style>
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Manage Orders</h1>
@@ -40,12 +56,9 @@
                     </thead>
                     <tbody>
                         <?php 
-                        // Load PaymentModel to get payment details
-                        $paymentModel = new \App\Models\PaymentModel();
-                        
                         foreach ($orders as $order): 
-                            // Get payment info for this order
-                            $payment = $paymentModel->where('order_id', $order['id'])->first();
+                            // Payment info is already in $order['payment']
+                            $payment = $order['payment'] ?? null;
                         ?>
                         <tr>
                             <td><?= $order['id'] ?></td>
@@ -60,9 +73,13 @@
                                 </span>
                             </td>
                             <td>
-                                <?php if (!empty($order['payment_method'])): ?>
-                                    <span class="badge bg-light text-dark">
-                                        <?= $order['payment_method_display'] ?>
+                                <?php if (isset($payment)): ?>
+                                    <span class="payment-method-badge">
+                                        <?= format_payment_method(detect_payment_method($payment)) ?>
+                                    </span>
+                                <?php elseif (!empty($order['payment_method'])): ?>
+                                    <span class="payment-method-badge">
+                                        <?= format_payment_method($order['payment_method']) ?>
                                     </span>
                                 <?php else: ?>
                                     <span class="text-muted">-</span>

@@ -30,7 +30,7 @@ abstract class BaseController extends Controller
      *
      * @var array
      */
-    protected $helpers = ['url', 'form', 'text'];
+    protected $helpers = ['url', 'form', 'text', 'payment'];
 
     /**
      * Constructor.
@@ -43,6 +43,9 @@ abstract class BaseController extends Controller
     {
         // Do Not Edit This Line
         parent::initController($request, $response, $logger);
+
+        // Load helpers
+        helper(['url', 'form', 'text', 'payment']);
 
         // Ensure the user is logged in and is an admin
         if (!session()->get('isLoggedIn') || session()->get('role') !== 'admin') {

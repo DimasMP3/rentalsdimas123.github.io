@@ -667,7 +667,7 @@
                                 <i class="fas fa-concierge-bell me-1"></i> Layanan
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#"><i class="fas fa-car-side me-2 text-primary"></i>Rental Mobil</a></li>
+                                <li><a class="dropdown-item" href="<?= site_url('cars') ?>"><i class="fas fa-car-side me-2 text-primary"></i>Rental Mobil</a></li>
                                 <li><a class="dropdown-item" href="#"><i class="fas fa-user-tie me-2 text-primary"></i>Rental + Supir (Belum Tersedia)</a></li>
                                 <li><a class="dropdown-item" href="#"><i class="fas fa-route me-2 text-primary"></i>Drop Off (Belum Tersedia)</a></li>
                             </ul>

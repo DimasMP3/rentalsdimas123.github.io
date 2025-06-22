@@ -362,7 +362,7 @@ document.addEventListener('DOMContentLoaded', function() {
     .divider-line {
         height: 1px;
         flex-grow: 1;
-        background-color: rgba(0, 0, 0, 0.1);
+        background-color: rgba(255, 0, 0, 0.95);
     }
     
     .divider-icon {
@@ -504,12 +504,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     .price-label {
         color: var(--gray-color);
-        font-size: 0.85rem;
+        font-size: 0.75rem;
     }
     
     .price-value {
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: 0.8rem;
+        color:#ee5253;
     }
     
     .price-highlight {

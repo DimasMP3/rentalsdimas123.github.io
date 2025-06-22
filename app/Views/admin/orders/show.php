@@ -1,5 +1,21 @@
 <?= $this->extend('layouts/admin') ?>
 <?= $this->section('content') ?>
+<?php 
+// Explicitly load the payment helper to ensure functions are available
+helper('payment'); 
+?>
+<style>
+/* Payment Method Badge Style */
+.payment-method-badge {
+    background-color: #f8f9fa;
+    color: #333;
+    font-weight: normal;
+    font-size: 0.85rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+}
+</style>
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Order Details</h1>
@@ -127,13 +143,31 @@
                         <tr>
                             <th>Payment Method</th>
                             <td>
-                                <?php if (!empty($order['payment_method'])): ?>
-                                <span class="badge bg-light text-dark">
-                                    <?= ucfirst(str_replace('_', ' ', $order['payment_method'])) ?>
-                                </span>
-                                <?php else: ?>
-                                <span class="text-muted">Not specified</span>
-                                <?php endif; ?>
+                                <?php
+                                // Use our payment helper
+                                if (isset($payment)) {
+                                    $paymentMethodData = detect_payment_method($payment);
+                                    if (!empty($paymentMethodData['method'])) {
+                                        echo '<span class="payment-method-badge">';
+                                        echo format_payment_method($paymentMethodData);
+                                        echo '</span>';
+                                    } else {
+                                        echo '<span class="text-muted">Not specified</span>';
+                                        // Debug info if needed
+                                        if (!empty($payment['bank_name'])) {
+                                            echo '<small class="text-danger d-block mt-1">';
+                                            echo 'Debug: Bank: ' . $payment['bank_name'];
+                                            echo '</small>';
+                                        }
+                                    }
+                                } elseif (!empty($order['payment_method'])) {
+                                    echo '<span class="payment-method-badge">';
+                                    echo format_payment_method($order['payment_method']);
+                                    echo '</span>';
+                                } else {
+                                    echo '<span class="text-muted">Not specified</span>';
+                                }
+                                ?>
                             </td>
                         </tr>
                         <tr>

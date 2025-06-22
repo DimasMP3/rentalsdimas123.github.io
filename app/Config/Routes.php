@@ -37,6 +37,9 @@ $routes->get('gallery', 'Gallery::index');
 $routes->get('gallery/index', 'Gallery::index');
 $routes->get('blog', 'Home::getBlog');
 
+// Special route to handle direct index.php/cars access
+$routes->get('index.php/cars', 'Cars::index');
+
 // Migration route (remove this after use)
 $routes->get('run-migration', 'MigrateController::runMigration');
 $routes->get('show-payments-table', 'MigrateController::showPaymentsTable');
@@ -84,6 +87,8 @@ $routes->group('admin', ['filter' => 'admin'], function($routes) {
     $routes->post('orders/update-status/(:num)', 'Admin\Orders::updateStatus/$1');
     $routes->post('orders/approve-payment/(:num)', 'Admin\Orders::approvePayment/$1');
     $routes->get('orders/export-excel', 'Admin\Orders::exportExcel');
+    $routes->get('orders/fix-payment-methods', 'Admin\Orders::fixAllPaymentMethods');
+    $routes->get('orders/check-payment/(:num)', 'Admin\Orders::checkPaymentMethod/$1');
     
     // Admin review management
     $routes->get('reviews', 'Admin\Reviews::index');
@@ -117,6 +122,7 @@ $routes->group('admin', ['filter' => 'admin'], function($routes) {
     $routes->post('payments/update-status/(:num)', 'Admin\Payments::updateStatus/$1');
     $routes->get('payments/filter', 'Admin\Payments::filter');
     $routes->get('payments/export-csv', 'Admin\Payments::exportCsv');
+    $routes->get('payments/fix-payment-methods', 'Admin\Payments::fixPaymentMethods');
     
     // Admin reports
     $routes->get('reports', 'Admin\Dashboard::reports');

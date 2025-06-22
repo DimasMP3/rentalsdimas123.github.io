@@ -18,22 +18,55 @@ class Cars extends BaseController
         $minPrice = $this->request->getGet('min_price');
         $maxPrice = $this->request->getGet('max_price');
         
-        // Apply filters
+        // Start building the query with available status
+        $carModel->where('status', 'available');
+        
+        // Apply category filter
         if ($category) {
             $carModel->where('category_id', $category);
         }
+
+        // Get all available cars first
+        $cars = $carModel->findAll();
         
-        if ($minPrice) {
-            $carModel->where('daily_rate >=', $minPrice);
-        }
-        
-        if ($maxPrice) {
-            $carModel->where('daily_rate <=', $maxPrice);
+        // Then filter by price (24 jam dalam/luar kota) with discount consideration
+        if (($minPrice !== '' && $minPrice !== null) || ($maxPrice !== '' && $maxPrice !== null)) {
+            $filteredCars = [];
+            
+            foreach ($cars as $car) {
+                // Use daily_rate directly as the "24 jam dalam/luar kota" price
+                $basePrice = $car['daily_rate']; // Now daily_rate directly represents 24 jam price
+                
+                // Apply discount if applicable
+                if (is_discount_day($car['id'])) {
+                    $percentage = get_discount_percentage($car['id']);
+                    $discountedPrice = $basePrice * (1 - ($percentage / 100));
+                    
+                    // Use discounted price for filtering
+                    if (
+                        ($minPrice === '' || $minPrice === null || $discountedPrice >= (float)$minPrice) &&
+                        ($maxPrice === '' || $maxPrice === null || $discountedPrice <= (float)$maxPrice)
+                    ) {
+                        $filteredCars[] = $car;
+                    }
+                } else {
+                    // No discount, use regular price
+                    if (
+                        ($minPrice === '' || $minPrice === null || $basePrice >= (float)$minPrice) &&
+                        ($maxPrice === '' || $maxPrice === null || $basePrice <= (float)$maxPrice)
+                    ) {
+                        $filteredCars[] = $car;
+                    }
+                }
+            }
+            
+            // Use filtered cars
+            $cars = $filteredCars;
         }
         
         $data = [
             'title' => 'Available Cars',
-            'cars' => $carModel->where('status', 'available')->findAll(),
+            'cars' => $cars,
             'categories' => $categoryModel->findAll()
         ];
         

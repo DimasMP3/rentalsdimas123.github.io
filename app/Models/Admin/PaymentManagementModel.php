@@ -82,4 +82,56 @@ class PaymentManagementModel extends Model
                 month
         ", [$year])->getResultArray();
     }
+    
+    public function getPaymentMethod($identifier, $type = 'payment_id')
+    {
+        $db = \Config\Database::connect();
+        $query = $db->table('payments');
+        
+        if ($type === 'payment_id') {
+            $query->where('id', $identifier);
+        } elseif ($type === 'order_id') {
+            $query->where('order_id', $identifier);
+        }
+        
+        $payment = $query->get()->getRowArray();
+        
+        if (!$payment || empty($payment['payment_method'])) {
+            return null;
+        }
+        
+        // Normalize payment method (lowercase for consistent matching)
+        $paymentMethod = strtolower($payment['payment_method']);
+        
+        $paymentDetails = [
+            'method' => $paymentMethod,
+            'details' => null
+        ];
+        
+        // Get specific payment method details based on the payment method
+        switch ($paymentMethod) {
+            case 'bank_transfer':
+            case 'transfer_bank':
+                $paymentDetails['method'] = 'bank_transfer';
+                $paymentDetails['details'] = $payment['bank_name'];
+                break;
+            case 'ewallet':
+            case 'e_wallet':
+                $paymentDetails['method'] = 'ewallet';
+                $paymentDetails['details'] = $payment['ewallet_provider'];
+                break;
+            case 'paylater':
+                $paymentDetails['details'] = $payment['paylater_provider'];
+                break;
+            case 'minimarket':
+                $paymentDetails['details'] = $payment['minimarket_provider'];
+                break;
+            case 'qris':
+            case 'credit_card':
+                // These methods don't have additional details
+                break;
+        }
+        
+        return $paymentDetails;
+    }
 } 

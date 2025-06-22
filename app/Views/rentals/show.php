@@ -1,6 +1,23 @@
 <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('content') ?>
+<?php 
+// Explicitly load the payment helper
+helper('payment'); 
+?>
+<style>
+/* Payment Method Badge Style */
+.payment-method-badge {
+    background-color: #f8f9fa;
+    color: #333;
+    font-weight: normal;
+    font-size: 0.9rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+    display: inline-block;
+}
+</style>
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-lg-10">
@@ -63,7 +80,18 @@
                                     </div>
                                     <div class="d-flex justify-content-between mb-2">
                                         <span class="text-muted">Metode Pembayaran:</span>
-                                        <span class="fw-bold"><?= ucfirst(str_replace('_', ' ', $order['payment_method'])) ?></span>
+                                        <span class="payment-method-badge">
+                                            <?php
+                                            if (isset($payment)) {
+                                                $paymentMethodData = detect_payment_method($payment);
+                                                echo format_payment_method($paymentMethodData);
+                                            } elseif (!empty($order['payment_method'])) {
+                                                echo format_payment_method($order['payment_method']);
+                                            } else {
+                                                echo '-';
+                                            }
+                                            ?>
+                                        </span>
                                     </div>
                                     
                                     <?php if (!empty($order['notes'])): ?>

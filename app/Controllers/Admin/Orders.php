@@ -7,6 +7,7 @@ use App\Models\OrderModel;
 use App\Models\CarModel;
 use App\Models\UserModel;
 use App\Models\PaymentModel;
+use App\Models\Admin\PaymentManagementModel;
 
 class Orders extends BaseController
 {
@@ -14,6 +15,7 @@ class Orders extends BaseController
     protected $carModel;
     protected $userModel;
     protected $paymentModel;
+    protected $paymentManagementModel;
     
     public function __construct()
     {
@@ -21,65 +23,43 @@ class Orders extends BaseController
         $this->carModel = new CarModel();
         $this->userModel = new UserModel();
         $this->paymentModel = new PaymentModel();
+        $this->paymentManagementModel = new PaymentManagementModel();
     }
     
     public function index()
     {
         $db = \Config\Database::connect();
         
+        // Load payment helper
+        helper('payment');
+        
         $orders = $this->orderModel->select('orders.*, cars.brand, cars.model, users.name as user_name')
                             ->join('cars', 'cars.id = orders.car_id')
                             ->join('users', 'users.id = orders.user_id')
                             ->findAll();
         
-        // Get additional payment details
+        // Get additional payment details but we don't need to pre-format them
+        // since we'll use the payment helper directly in the view
         foreach ($orders as &$order) {
             // Find payment details when available
             $payment = $this->paymentModel->where('order_id', $order['id'])->first();
             
-            // Process payment method for better readability
-            if (!empty($order['payment_method'])) {
-                switch ($order['payment_method']) {
-                    case 'transfer_bank':
-                        $order['payment_method_display'] = 'Transfer Bank';
-                        // Add bank name if available in payment
-                        if ($payment && !empty($payment['bank_name'])) {
-                            $order['payment_method_display'] .= ' (' . strtoupper($payment['bank_name']) . ')';
-                        }
-                        break;
-                    case 'credit_card':
-                        $order['payment_method_display'] = 'Kartu Kredit';
-                        break;
-                    case 'e_wallet':
-                        $order['payment_method_display'] = 'E-Wallet';
-                        // Add provider if available in payment
-                        if ($payment && !empty($payment['ewallet_provider'])) {
-                            $order['payment_method_display'] .= ' (' . ucfirst($payment['ewallet_provider']) . ')';
-                        }
-                        break;
-                    case 'qris':
-                        $order['payment_method_display'] = 'QRIS';
-                        break;
-                    case 'paylater':
-                        $order['payment_method_display'] = 'Paylater';
-                        // Add provider if available in payment
-                        if ($payment && !empty($payment['paylater_provider'])) {
-                            $order['payment_method_display'] .= ' (' . ucfirst($payment['paylater_provider']) . ')';
-                        }
-                        break;
-                    case 'minimarket':
-                        $order['payment_method_display'] = 'Minimarket';
-                        // Add provider if available in payment
-                        if ($payment && !empty($payment['minimarket_provider'])) {
-                            $order['payment_method_display'] .= ' (' . ucfirst($payment['minimarket_provider']) . ')';
-                        }
-                        break;
-                    default:
-                        $order['payment_method_display'] = ucfirst(str_replace('_', ' ', $order['payment_method']));
-                }
-            } else {
-                $order['payment_method_display'] = '-';
+            // Fix payment method if needed
+            if ($payment && empty($payment['payment_method']) && 
+                (!empty($payment['bank_name']) || 
+                !empty($payment['ewallet_provider']) || 
+                !empty($payment['paylater_provider']) || 
+                !empty($payment['minimarket_provider']))) {
+                
+                // Use the helper function
+                fix_payment_method($payment['id']);
+                
+                // Reload payment after fixing
+                $payment = $this->paymentModel->find($payment['id']);
             }
+            
+            // Store payment in order for view access
+            $order['payment'] = $payment;
         }
         
         $data = [
@@ -101,8 +81,44 @@ class Orders extends BaseController
             return redirect()->to('/admin/orders')->with('error', 'Order not found');
         }
         
-        // Get payment information
+        // Get payment information directly
         $payment = $this->paymentModel->where('order_id', $id)->first();
+        
+        // If payment exists but payment_method is empty, auto-fix based on provider fields
+        if ($payment) {
+            $db = \Config\Database::connect();
+            
+            // Direct SQL fix for this specific payment
+            if (empty($payment['payment_method'])) {
+                $sql = "UPDATE payments SET payment_method = CASE 
+                            WHEN bank_name != '' THEN 'bank_transfer' 
+                            WHEN ewallet_provider != '' THEN 'e_wallet' 
+                            WHEN paylater_provider != '' THEN 'paylater' 
+                            WHEN minimarket_provider != '' THEN 'minimarket' 
+                            ELSE payment_method 
+                        END 
+                        WHERE id = ?";
+                $db->query($sql, [$payment['id']]);
+                
+                // Reload the payment record
+                $payment = $this->paymentModel->find($payment['id']);
+            }
+            
+            // Ensure we have payment method info for the view
+            if (empty($payment['payment_method']) && !empty($payment['bank_name'])) {
+                $payment['payment_method'] = 'bank_transfer';
+            } elseif (empty($payment['payment_method']) && !empty($payment['ewallet_provider'])) {
+                $payment['payment_method'] = 'e_wallet';
+            } elseif (empty($payment['payment_method']) && !empty($payment['paylater_provider'])) {
+                $payment['payment_method'] = 'paylater';
+            } elseif (empty($payment['payment_method']) && !empty($payment['minimarket_provider'])) {
+                $payment['payment_method'] = 'minimarket';
+            }
+            
+            log_message('info', 'Payment found for order ' . $id . ': ' . json_encode($payment));
+        } else {
+            log_message('info', 'No payment found for order ' . $id);
+        }
         
         $data = [
             'title' => 'Order Details',
@@ -217,6 +233,9 @@ class Orders extends BaseController
     
     public function exportExcel()
     {
+        // Load payment helper
+        helper('payment');
+        
         // Get all orders with related info
         $orders = $this->orderModel->select('orders.*, cars.brand, cars.model, users.name as user_name, users.email as user_email, users.phone as user_phone')
                             ->join('cars', 'cars.id = orders.car_id')
@@ -260,9 +279,30 @@ class Orders extends BaseController
             // Get car details
             $car = $this->carModel->find($order['car_id']);
             
-            // Get payment details
+            // Get payment details using helper
             $payment = $this->paymentModel->where('order_id', $order['id'])->first();
-            $paymentMethod = !empty($order['payment_method']) ? ucfirst(str_replace('_', ' ', $order['payment_method'])) : '-';
+            
+            // Fix payment method if needed
+            if ($payment && empty($payment['payment_method']) && 
+                (!empty($payment['bank_name']) || 
+                !empty($payment['ewallet_provider']) || 
+                !empty($payment['paylater_provider']) || 
+                !empty($payment['minimarket_provider']))) {
+                
+                fix_payment_method($payment['id']);
+                $payment = $this->paymentModel->find($payment['id']);
+            }
+            
+            // Detect and format payment method
+            $paymentMethodText = '-';
+            if ($payment) {
+                $paymentMethodData = detect_payment_method($payment);
+                if (!empty($paymentMethodData['method'])) {
+                    $paymentMethodText = format_payment_method($paymentMethodData);
+                }
+            } elseif (!empty($order['payment_method'])) {
+                $paymentMethodText = format_payment_method($order['payment_method']);
+            }
             
             fputcsv($handle, [
                 $order['id'],
@@ -276,7 +316,7 @@ class Orders extends BaseController
                 $duration,
                 'Rp ' . number_format($order['total_price'], 0, ',', '.'),
                 ucfirst($order['status']),
-                $paymentMethod,
+                $paymentMethodText,
                 ucfirst($order['payment_status'])
             ]);
         }
@@ -284,5 +324,72 @@ class Orders extends BaseController
         // Close the file handle
         fclose($handle);
         exit;
+    }
+    
+    // Function to fix all payment methods in the database
+    public function fixAllPaymentMethods()
+    {
+        $db = \Config\Database::connect();
+        
+        // Direct SQL fix for all payments
+        $sql = "UPDATE payments SET payment_method = CASE 
+                    WHEN bank_name != '' THEN 'bank_transfer' 
+                    WHEN ewallet_provider != '' THEN 'e_wallet' 
+                    WHEN paylater_provider != '' THEN 'paylater' 
+                    WHEN minimarket_provider != '' THEN 'minimarket' 
+                    ELSE payment_method 
+                END 
+                WHERE payment_method = '' OR payment_method IS NULL";
+        
+        $db->query($sql);
+        $affectedRows = $db->affectedRows();
+        
+        return 'Fixed ' . $affectedRows . ' payment records.';
+    }
+    
+    // Diagnostic function to check payment method detection
+    public function checkPaymentMethod($id)
+    {
+        // Get payment information
+        $payment = $this->paymentModel->where('order_id', $id)->first();
+        
+        if (!$payment) {
+            return 'No payment found for order ID: ' . $id;
+        }
+        
+        $output = '<h3>Payment Method Diagnostic</h3>';
+        $output .= '<p>Payment ID: ' . $payment['id'] . '</p>';
+        $output .= '<p>Order ID: ' . $payment['order_id'] . '</p>';
+        $output .= '<p>Payment Method: ' . ($payment['payment_method'] ?: 'Not set') . '</p>';
+        $output .= '<p>Bank Name: ' . ($payment['bank_name'] ?: 'Not set') . '</p>';
+        $output .= '<p>E-Wallet Provider: ' . ($payment['ewallet_provider'] ?: 'Not set') . '</p>';
+        $output .= '<p>Paylater Provider: ' . ($payment['paylater_provider'] ?: 'Not set') . '</p>';
+        $output .= '<p>Minimarket Provider: ' . ($payment['minimarket_provider'] ?: 'Not set') . '</p>';
+        
+        // Detected payment method
+        $detectedMethod = '';
+        if (!empty($payment['bank_name'])) {
+            $detectedMethod = 'bank_transfer (' . $payment['bank_name'] . ')';
+        } elseif (!empty($payment['ewallet_provider'])) {
+            $detectedMethod = 'e_wallet (' . $payment['ewallet_provider'] . ')';
+        } elseif (!empty($payment['paylater_provider'])) {
+            $detectedMethod = 'paylater (' . $payment['paylater_provider'] . ')';
+        } elseif (!empty($payment['minimarket_provider'])) {
+            $detectedMethod = 'minimarket (' . $payment['minimarket_provider'] . ')';
+        }
+        
+        $output .= '<p>Detected Method: ' . ($detectedMethod ?: 'Could not detect') . '</p>';
+        
+        // Order payment method
+        $order = $this->orderModel->find($payment['order_id']);
+        if ($order) {
+            $output .= '<p>Order Payment Method: ' . ($order['payment_method'] ?: 'Not set') . '</p>';
+        }
+        
+        $output .= '<hr>';
+        $output .= '<a href="' . site_url('admin/orders/' . $id) . '" class="btn btn-primary">Return to Order</a> ';
+        $output .= '<a href="' . site_url('admin/orders/fix-payment-methods') . '" class="btn btn-warning">Fix All Payment Methods</a>';
+        
+        return $output;
     }
 } 

@@ -61,6 +61,50 @@
                         </div>
                     </div>
                     
+                    <!-- Rental Type Options -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Jenis Rental</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row rental-type-options">
+                                <div class="col-md-4 mb-3">
+                                    <div class="form-check rental-option">
+                                        <input class="form-check-input" type="radio" name="rental_type" id="rental_mobil" value="rental_mobil" checked required>
+                                        <label class="form-check-label w-100" for="rental_mobil">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-car me-2"></i>
+                                                <span>Rental Mobil</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="form-check rental-option">
+                                        <input class="form-check-input" type="radio" name="rental_type" id="rental_supir" value="rental_supir" disabled>
+                                        <label class="form-check-label w-100 text-muted" for="rental_supir">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-user-tie me-2"></i>
+                                                <span>Rental + Supir (Belum Tersedia)</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="form-check rental-option">
+                                        <input class="form-check-input" type="radio" name="rental_type" id="drop_off" value="drop_off" disabled>
+                                        <label class="form-check-label w-100 text-muted" for="drop_off">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-map-marker-alt me-2"></i>
+                                                <span>Drop Off (Belum Tersedia)</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <form action="<?= site_url('rentals/store') ?>" method="post" enctype="multipart/form-data">
                         <?= csrf_field() ?>
                         <input type="hidden" name="car_id" value="<?= $car['id'] ?>">
@@ -311,9 +355,8 @@
                                                 <h6 class="card-title">Pembayaran QRIS</h6>
                                                 <p>Scan kode QR untuk melakukan pembayaran</p>
                                                 <div class="mb-3">
-                                                    <img src="<?= base_url('assets/images/qris-sample.png') ?>" alt="QRIS Code" class="img-fluid" style="max-width: 200px;">
+                                                    <img src="<?= base_url('assets/images/cars/qris-sample.png') ?>" alt="QRIS Code" class="img-fluid" style="max-width: 200px;">
                                                 </div>
-                                                <p class="small text-muted">Kode QR yang sebenarnya akan muncul setelah Anda menekan tombol "Pesan Sekarang"</p>
                                             </div>
                                         </div>
                                     </div>
@@ -382,6 +425,9 @@
                         
                         <!-- Hidden field to store the calculated total price -->
                         <input type="hidden" name="total_price" id="hidden_total_price" value="0">
+                        
+                        <!-- Hidden field to store the selected rental type -->
+                        <input type="hidden" name="rental_type_form" id="hidden_rental_type" value="rental_mobil">
                     </form>
                 </div>
             </div>
@@ -398,6 +444,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const paymentDetailSections = document.querySelectorAll('.payment-detail-section');
     const discountData = JSON.parse(document.getElementById('discountData').getAttribute('data-discount-days'));
     const carId = document.getElementById('discountData').getAttribute('data-car-id');
+    const rentalTypeOptions = document.querySelectorAll('input[name="rental_type"]');
+    const hiddenRentalTypeField = document.getElementById('hidden_rental_type');
+    
+    // Rental type selection
+    rentalTypeOptions.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (!this.disabled) {
+                hiddenRentalTypeField.value = this.value;
+            }
+        });
+    });
     
     // Date calculation functions
     function updateDateDifference() {
@@ -582,7 +639,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Style the payment options for better UI
     document.head.insertAdjacentHTML('beforeend', `
     <style>
-        .payment-option {
+        .payment-option, .rental-option {
             border: 1px solid #dee2e6;
             border-radius: 5px;
             padding: 10px;
@@ -591,12 +648,13 @@ document.addEventListener('DOMContentLoaded', function() {
             transition: all 0.3s ease;
         }
         
-        .payment-option:hover {
+        .payment-option:hover, .rental-option:hover {
             border-color: #adb5bd;
             background-color: #f8f9fa;
         }
         
-        .form-check-input:checked + .form-check-label .payment-option {
+        .form-check-input:checked + .form-check-label .payment-option,
+        .form-check-input:checked + .form-check-label .rental-option {
             border-color: #0d6efd;
             background-color: #e7f0ff;
         }

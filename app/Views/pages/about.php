@@ -166,7 +166,7 @@
                     <div class="card text-center team-card">
                         <img src="<?= base_url('assets/images/team-2.png') ?>" class="card-img-top" alt="Anggota Tim">
                         <div class="card-body">
-                            <h5 class="card-title mb-0">Dio Jambu Kretek</h5>
+                            <h5 class="card-title mb-0">Riefaldi Diofano Saputra</h5>
                             <p class="card-text text-muted">Manajer Armada</p>
                         </div>
                     </div>
